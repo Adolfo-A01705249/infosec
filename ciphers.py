@@ -42,7 +42,7 @@ def numToLetter(num):
 def mod(num, divisor):
     if num >= 0:
         return (num % divisor)
-    return (divisor - ((-num) % divisor))
+    return ((divisor - ((-num) % divisor)) % divisor)
 
 class TwoByTwoCipherMat:
     mat = [[0, 0], [0, 0]]
