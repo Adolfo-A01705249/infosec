@@ -1,11 +1,15 @@
-# ----------------------------------------------
-# Encodes and decodes text (made from a reduced 
-# subset of characters) using Hill's algorithm
-# ----------------------------------------------
+# -------------------------------------------------
+# Encodes and decodes text using Hill's algorithm |
+# -------------------------------------------------
 
-# usage: $python hill_ciphers.py <text> <key> -s <string> -e|-d
+# usage: $python hill_cipher.py <input file> <output file> <key> -e|-d
 
-# Notes: for the algorithm to work
+# Notes: for the algorithm to work both the text and the key must be made
+# exclusively out of characters from the code's alphabet, and the key must 
+# represent a valid invertible matrix, that is, a matrix which:
+# - is square
+# - has non-zero determinant
+# - has a determinant coprime with the alphabet length
 
 # Author: Adolfo Acosta Castro
 # Date: 2022/11/16
@@ -30,7 +34,9 @@ while i <= ord('9'):
     
 ALPHABET += [
     'ñ', 'Ñ', 'Á', 'É', 'Í', 'Ó', 'Ú', 'á', 'é', 'í', 'ó', 'ú',
-    ' ', ',', '.', '¿', '?', '¡', '!', '$', '*', '+', '-', '/', '#', '\'', '\"']
+    ' ', ',', '.', '¿', '?', '¡', '!', '$', '*', '+', '-', '/', ':',
+    '(', ')', '[', ']', '{', '}', ';',
+    '\'', '\"', '\n']
 
 ALPHABET_LEN = len(ALPHABET)
 ENCODE = True
@@ -39,7 +45,8 @@ DECODE = False
 def letterToNum(letter):
     if letter in ALPHABET:
         return ALPHABET.index(letter)
-    print(f"{letter} isn't supported by the alphabet")
+    print(f"\"{letter}\" isn't supported by the alphabet")
+    sys.exit(0)
 
 def numToLetter(num):
     return ALPHABET[num]
@@ -69,19 +76,19 @@ def gcdExtended(a, b):
      
     return g, x, y
 
-def det(matrix):
+def det(mat):
     '''
     Calculates the determinant of a matrix using 
     Laplace expansion. Adapted from:
     https://en.wikipedia.org/wiki/Laplace_expansion   
     '''
-    if len(matrix) == 1:
-        return matrix[0][0]
+    if len(mat) == 1:
+        return mat[0][0]
 
     determinant = 0    
-    firstRow = matrix[0]
+    firstRow = mat[0]
     for column, value in enumerate(firstRow):
-        lowerRows = matrix[1:]
+        lowerRows = mat[1:]
         minor = [row[:column] + row[column+1:] for row in lowerRows]
         sign = 1 if column % 2 == 0 else -1
         determinant += sign * value * det(minor)
@@ -174,18 +181,6 @@ class CipherMat:
             result[row] = mod(result[row], ALPHABET_LEN)
 
         return result
-        
-    def printMatrix(self, message):
-        '''
-        Prints the matrix numeric values
-        '''
-        print(message)
-        for row in range(self.rows):
-            for col in range(self.columns):
-                print(f"{self.mat[row][col]} ", end="")
-            print("")
-        print("")
-
 
 def hillCipher(message, key, encoding = True):
     cipherMat = CipherMat()
@@ -218,7 +213,7 @@ def testCipher(message, key):
     decipheredText = hillCipher(cipheredText, key, DECODE)
     assert(message == decipheredText.strip())
             
-def testCiphers():
+def testCases():
     keys = [
         'TWOK', 'HELL', 
         'NINECHARS', 'LONGERKEY', 'THREE KEY',
@@ -235,15 +230,20 @@ def testCiphers():
             testCipher(text, key)
 
 
-text = sys.argv[1]
-key = sys.argv[2]
-mode = sys.argv[3]
+inputFile = sys.argv[1]
+outputFile = sys.argv[2]
+key = sys.argv[3]
+mode = sys.argv[4]
 
-text = text
-key = key
+text = ""
+with open(inputFile, 'r') as file:
+    text = file.read()
 mode = ENCODE if mode == "-e" else DECODE
 
 processedString = hillCipher(text, key, mode)
-print(processedString)
 
-testCiphers()
+print(processedString)
+with open(outputFile, 'w') as file:
+    file.write(processedString)
+
+testCases()
