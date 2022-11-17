@@ -1,10 +1,10 @@
-# -------------------------------------------------
-# Encodes and decodes text using Hill's algorithm |
-# -------------------------------------------------
+# -------------------------------------------------------
+# Encodes and decodes text files using Hill's algorithm |
+# -------------------------------------------------------
 
 # usage: $python hill_cipher.py <input file> <output file> <key> -e|-d
 
-# Notes: for the algorithm to work both the text and the key must be made
+# Notes: for the algorithm to work, both the text and the key must be made
 # exclusively out of characters from the code's alphabet, and the key must 
 # represent a valid invertible matrix, that is, a matrix which:
 # - is square
@@ -12,12 +12,13 @@
 # - has a determinant coprime with the alphabet length
 
 # Author: Adolfo Acosta Castro
-# Date: 2022/11/16
+# Date: 2022/11/17
 
 import sys
 import math 
 
-# Set up extended alphabet
+# Set up extended alphabet. 
+# A prime alphabet length works best to ensure invertibility of the key
 ALPHABET = []
 i = ord('A')
 while i <= ord('Z'):
@@ -36,25 +37,34 @@ ALPHABET += [
     'ñ', 'Ñ', 'Á', 'É', 'Í', 'Ó', 'Ú', 'á', 'é', 'í', 'ó', 'ú',
     ' ', ',', '.', '¿', '?', '¡', '!', '$', '*', '+', '-', '/', ':',
     '(', ')', '[', ']', '{', '}', ';',
-    '\'', '\"', '\n']
+    '\'', '\"', '\n'
+]
 
 ALPHABET_LEN = len(ALPHABET)
 ENCODE = True
 DECODE = False
 
 def letterToNum(letter):
+    '''
+    Returns the corresponding index in [0, ALPHABET_LEN) 
+    of a letter. Throws an error if the letter isn't part
+    of the alphabet.
+    '''
     if letter in ALPHABET:
         return ALPHABET.index(letter)
     print(f"\"{letter}\" isn't supported by the alphabet")
     sys.exit(0)
 
 def numToLetter(num):
+    '''
+    Returns te correspoding letter of a number in [0, ALPHABET_LEN) .
+    '''
     return ALPHABET[num]
 
 def gcd(a, b):
     '''
     Returns the greatest common divisor of two integers
-    using Euclid's algorithm
+    using Euclid's algorithm.
     '''
     if a == 0:
         return b
@@ -64,7 +74,7 @@ def gcdExtended(a, b):
     '''
     Returns the greatest common divisor of two integers
     and integers x and y such that ax + by = gcd(a, b)
-    using Euclid's extended algorithm
+    using Euclid's extended algorithm.
     '''
     if a == 0 :
         return b, 0, 1
@@ -96,11 +106,18 @@ def det(mat):
     return determinant
 
 def mod(num, divisor):
+    '''
+    Returns the modulus of a number given a modular base.
+    '''
     if num >= 0:
         return (num % divisor)
     return ((divisor - ((-num) % divisor)) % divisor)
 
 class CipherMat:
+    '''
+    An object used to cipher and decipher blocks of text
+    in Hill's cipher algorithm.
+    '''
     mat = None
     rows = 0
     columns = 0
@@ -108,7 +125,7 @@ class CipherMat:
     def stringToMat(self, string):
         '''
         Converts a string's characters to numbers and stores them
-        in the cipher matrix
+        in the cipher matrix.
         '''        
         self.rows = self.columns = int(math.sqrt(len(string)))
 
@@ -126,11 +143,14 @@ class CipherMat:
                 i += 1
     
     def size(self):
+        '''
+        Returns the number of rows of the stored matrix -_-.
+        '''
         return self.rows
 
     def inverse(self):
         '''
-        Replaces the matrix with its modular inverse
+        Replaces the matrix with its modular inverse.
         '''
         # Verify if inverse exists
         determinant = det(self.mat)
@@ -171,7 +191,8 @@ class CipherMat:
 
     def cipher(self, block):
         '''
-        Returns the multiplication of the stored matrix by the block
+        Returns the multiplication of the stored matrix 
+        by a block with modulus.
         '''
         result = []
         for row in range(self.rows):
@@ -183,6 +204,15 @@ class CipherMat:
         return result
 
 def hillCipher(message, key, encoding = True):
+    '''
+    Encodes and decodes messages using the provided key.
+    Arguments:
+        message: a string, the text to process
+        key: a string, a text representation of the cipher's original matrix
+        encoding: a flag, true if using the function to encode, false when decoding
+    Returns:
+        a string, the processed text
+    '''
     cipherMat = CipherMat()
     cipherMat.stringToMat(key)
     if not encoding:
@@ -192,6 +222,7 @@ def hillCipher(message, key, encoding = True):
     transformedMessage = ""
     blockLen = cipherMat.size()
 
+    # Pad string with spaces to make its length a multiple of the block length
     if len(message) % blockLen != 0:
         missingLen = blockLen - (len(message) % blockLen) 
         message += ' ' * missingLen
@@ -209,11 +240,19 @@ def hillCipher(message, key, encoding = True):
     return transformedMessage
 
 def testCipher(message, key):
+    '''
+    Asserts that a text can be successfully enconded and decoded
+    using the hillCipher function.
+    '''
     cipheredText = hillCipher(message, key, ENCODE)
     decipheredText = hillCipher(cipheredText, key, DECODE)
     assert(message == decipheredText.strip())
             
 def testCases():
+    '''
+    Verifies the hillCipher function with all combinations
+    of a list of texts and keys.
+    '''
     keys = [
         'TWOK', 'HELL', 
         'NINECHARS', 'LONGERKEY', 'THREE KEY',
