@@ -75,6 +75,7 @@ def gcdExtended(a, b):
     Returns the greatest common divisor of two integers
     and integers x and y such that ax + by = gcd(a, b)
     using Euclid's extended algorithm.
+    Adapted from https://www.geeksforgeeks.org/python-program-for-basic-and-extended-euclidean-algorithms-2/
     '''
     if a == 0 :
         return b, 0, 1
